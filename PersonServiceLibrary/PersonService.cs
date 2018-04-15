@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 namespace PersonServiceLibrary
 {
     /*Assumptions:
-     * 1. Not checking if record values are empty
+     * 1. Using singleton pattern so that person repository can be sored in memory.
+     * 2. Not checking if record values are empty while parsing. for example, if favorite color is not provided, still a valid record.
      * 2. Screen output always in CSV
     */
     public sealed class PersonService
@@ -95,7 +96,7 @@ namespace PersonServiceLibrary
             return PersonRepository.OrderBy(P => P.DateofBirth).ToList();
         }
 
-        //Sort by LastName
+        //Sort by LastName descending
         public List<Person> GetPersons_orderbyLastNameDescending()
         {
             return PersonRepository.OrderByDescending(P => P.LastName).ToList();
