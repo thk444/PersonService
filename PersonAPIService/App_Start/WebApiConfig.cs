@@ -22,8 +22,8 @@ namespace PersonAPIService
 
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
-                routeTemplate: "api/{controller}/{sorttype}",
-                defaults: new { sorttype = RouteParameter.Optional }
+                routeTemplate: "api/{controller}/{input}",
+                defaults: new { input = RouteParameter.Optional }
             );
         }
     }

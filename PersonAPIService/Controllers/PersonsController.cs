@@ -8,60 +8,132 @@ using System.Web.Http;
 
 namespace PersonAPIService.Controllers
 {
+        /*Assumptions:
+         * 1. We don't have unique identifier to identify each record in data. So for simplicity, Put and Delete actions are depending on last name. 
+      */
     public class PersonsController : ApiController
     {
-        private PersonService PS = PersonService.GetInstance;
+        public PersonService PS = PersonService.GetInstance;
 
         // GET api/values
-        public List<Person> Get()
+        public IHttpActionResult Get()
         {
 
-            return PS.GetPersons_orderbyLastNameDescending();
+            try
+            {
+                return Ok(PS.PersonRepository.ToList());
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
         }
 
-        // GET api/values/5
-        public List<Person> Get(string SortType)
+        // GET api/values/{sortby}
+        public IHttpActionResult Get(string input)
         {
-            switch (SortType.ToLower())
+            try
             {
-                case "gender":
-                    {
-                        return PS.GetPersons_orderbyGender();
+                switch (input.ToLower())
+                {
+                    case "gender":
+                        {
+                            return Ok(PS.GetPersons_orderbyGender());
 
-                    }
-                case "dateofbirth":
-                case "dob":
-                    {
-                        return PS.GetPersons_orderbyBirthDate();
+                        }
+                    case "dateofbirth":
+                    case "dob":
+                        {
+                            return Ok(PS.GetPersons_orderbyBirthDate());
 
-                    }
-                case "lastname":
-                case "name":
-                    {
-                        return PS.GetPersons_orderbyLastNameDescending();
+                        }
+                    case "lastname":
+                    case "name":
+                        {
+                            return Ok(PS.GetPersons_orderbyLastNameDescending());
 
-                    }
-                default:
-                    {
-                        return PS.GetPersons_orderbyLastNameDescending();
-                    }
+                        }
+                    default:
+                        {
+                            return Content(HttpStatusCode.NotFound, "Invalid sort type");
+                        }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
             }
         }
 
         // POST api/values
-        public void Post([FromBody]string value)
+        public IHttpActionResult Post([FromBody]string value)
         {
-            PS.ParsePersonRecord(value);
+            try
+            {
+                if (value == null | value == string.Empty)
+                { 
+                    return BadRequest("Person record cannot be null or empty");
+                }
+                else
+                { 
+                    PS.ParsePersonRecord(value);
+                    return Created(new Uri(Request.RequestUri.ToString()), value);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
         }
 
-        // PUT api/values/5
-        public void Put(int id, [FromBody]string value)
+        // PUT api/values/{input}
+        public IHttpActionResult Put(string input, [FromBody]string value)
         {
+            try
+            {
+                Person P = PS.PersonRepository.FirstOrDefault(Person => Person.LastName == input);
+                if (P == null)
+                {
+                    return Content(HttpStatusCode.NotFound, "Person Not found");
+                }
+                else
+                {
+                    PS.PersonRepository.RemoveAll(Person => Person.LastName == input);
+                    PS.ParsePersonRecord(value);
+                    return Content(HttpStatusCode.OK, "Person with last name " + input + " updated");
+                }
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
         }
 
-        // DELETE api/values/5
-        public void Delete(int id)
+        // DELETE api/values/{input}
+        public IHttpActionResult Delete([FromUri]string input)
         {
+            try
+            {
+                Person P = PS.PersonRepository.FirstOrDefault(Person => Person.LastName == input);
+                if (P == null)
+                {
+                    return Content(HttpStatusCode.NotFound, "Person Not found");
+                }
+                else
+                {
+                    PS.PersonRepository.RemoveAll(Person => Person.LastName == input);
+                    return Content(HttpStatusCode.OK, "Person with last name " + input + " deleted");
+                }
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
         }
     }
 }
